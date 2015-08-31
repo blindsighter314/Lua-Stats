@@ -3,11 +3,12 @@ local curDir = lfs.currentdir()
 local b = [[\]]
 local function checkValidDir(dir) return dir ~= "." and dir ~= ".." and dir ~= "main.lua" end
 local checkFilters = { -- {"trigger", "pretty name"}
-	{"function(", 	"Functions:\t\t"},
+	{"function", 	"Functions:\t\t"},
 	{"hook.Add", 	"Hooks:\t\t\t"},
 	{"net.Send", 	"Net Messages Sent\t"}
 }
 local lines 	= 0
+local noteMode 	= false
 
 -- explode() function from the lua wiki http://lua-users.org/wiki/SplitJoin FunctionL PHP-like explode
 local function explode(d,p)
@@ -28,6 +29,66 @@ local function explode(d,p)
   return t
 end
 
+local function noteCheck(line)
+	local len = string.len(line)
+	if (string.find(line, "--", 1, len) or string.find(line, "//", 1, len)) and string.find(line, "--[[", 1, len) == nil then
+		if noteMode == true then return "" end
+		local s,f
+
+		if string.find(line, "--", 1, len) then
+			s,f = string.find(line, "--", 1, len)
+		else
+			s,f = string.find(line, "//", 1, len)
+		end
+
+		if s > 1 then
+			local nonNotedString = string.sub(line, 1, (s - 1))
+			return nonNotedString
+		else
+			return ""
+		end
+	elseif string.find(line, "--[[", 1, len) or string.find(line, "/*", 1, len) then
+		if noteMode == true then return "" end
+		local s,f
+		noteMode = true
+
+		if string.find(line, "--[[", 1, len) then
+			s,f = string.find(line, "--[[", 1, len)
+		else
+			s,f = string.find(line, "/*", 1, len)
+		end
+
+		if s > 1 then
+			local nonNotedString = string.sub(line, 1, (s - 1))
+			return nonNotedString
+		else
+			return ""
+		end
+	elseif (string.find(line, "]]", 1, len) or string.find (line, "*/", 1, len)) and noteMode == true then
+		local s,f
+		noteMode = false
+
+		if string.find(line, "]]", 1, len) then
+			s,f = string.find(line, "]]", 1, len)
+		else
+			s,f = string.find(line, "*/", 1, len)
+		end
+
+		if f == len then
+			return ""
+		else
+			local nonNotedString = string.sub(line, f, len)
+			return nonNotedString
+		end
+	else
+		if noteMode == true then
+			return ""
+		else
+			return line
+		end
+	end
+end
+
 local function scanDir(dir)
 	for fl in lfs.dir(dir) do
 		if checkValidDir(fl) then
@@ -39,7 +100,7 @@ local function scanDir(dir)
 				f:close()
 				for k,v in pairs(content) do
 					for i,r in pairs(checkFilters) do
-						if string.find(v, r[1]) ~= nil then
+						if string.find(noteCheck(v), r[1]) ~= nil then
 							if #r == 2 then
 								table.insert(r, 1)
 							else
