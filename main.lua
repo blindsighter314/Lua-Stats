@@ -3,9 +3,9 @@ local curDir = lfs.currentdir()
 local b = [[\]]
 local function checkValidDir(dir) return dir ~= "." and dir ~= ".." and dir ~= "main.lua" end
 local checkFilters = { -- {"trigger", "pretty name"}
-	{"function", "Functions:\t\t"},
-	{"hook.Add", "Hooks:\t\t\t"},
-	{"net.Send", "Net Messages Sent\t"}
+	{"function(", 	"Functions:\t\t"},
+	{"hook.Add", 	"Hooks:\t\t\t"},
+	{"net.Send", 	"Net Messages Sent\t"}
 }
 local lines 	= 0
 
@@ -33,7 +33,6 @@ local function scanDir(dir)
 		if checkValidDir(fl) then
 			if lfs.attributes(dir..b..fl, "mode") == "directory" then
 				scanDir(dir..b..fl)
-				lfs.rmdir(dir..b..fl)
 			elseif string.sub(fl, (string.len(fl) - 3), string.len(fl)) == ".lua" then
 				local f = io.open(dir..b..fl, "rb")
 				local content = explode("\n", f:read("*all"))
