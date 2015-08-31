@@ -8,9 +8,6 @@ local checkFilters = { -- {"trigger", "pretty name"}
 	{"net.Send", "Net Messages Sent\t"}
 }
 local lines 	= 0
-local functions = 0
-local hooks		= 0
-local netSent 	= 0
 
 -- explode() function from the lua wiki http://lua-users.org/wiki/SplitJoin FunctionL PHP-like explode
 local function explode(d,p)
