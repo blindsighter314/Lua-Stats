@@ -1,7 +1,7 @@
 require "lfs"
 local curDir = lfs.currentdir()
 local b = [[\]]
-local function checkValidDir(dir) return dir ~= "." and dir ~= ".." and dir ~= "main.lua" end
+local function checkValidDir(dir) return dir ~= "." and dir ~= ".." end
 local checkFilters = { -- {"trigger", "pretty name"}
 	{"function", 	"Functions:\t\t"},
 	{"if",			"If Statements:\t\t"},
@@ -111,6 +111,7 @@ local function scanDir(dir)
 			if lfs.attributes(dir..b..fl, "mode") == "directory" then
 				scanDir(dir..b..fl)
 			elseif string.sub(fl, (string.len(fl) - 3), string.len(fl)) == ".lua" then
+				if (dir..b..fl) == (curDir..b..fl) then return end
 				local f = io.open(dir..b..fl, "rb")
 				local unprocessed = f:read("*all")
 				local b,k = processBytes(string.len(unprocessed), 0)
