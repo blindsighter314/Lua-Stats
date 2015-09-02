@@ -10,7 +10,7 @@ local checkFilters = { -- {"trigger", "pretty name"}
 }
 local lines 		= 0
 local noteMode 		= false
-local detailMode	= true
+local detailMode	= false
 
 local mostLines 	= 0
 local LineFile 		= ""
@@ -149,6 +149,13 @@ local function scanDir(dir)
 		end
 	end
 end
+
+print("Use Detail Mode? (y/n)")
+
+if io.read() == "y" then -- No answer = No let me at that sweet sweet data
+	detailMode = true
+end
+
 print("Processing...\n")
 if detailMode == true then
 	print("File Name\t\tKb  Mb\t\tLines")	
