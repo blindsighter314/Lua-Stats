@@ -3,14 +3,27 @@ local curDir = lfs.currentdir()
 local b = [[\]]
 local function checkValidDir(dir) return dir ~= "." and dir ~= ".." end
 local checkFilters = { -- {"trigger", "pretty name"}
-	{"function", 	"Functions:\t\t"},
-	{"if",			"If Statements:\t\t"},
-	{"hook.Add", 	"Hooks:\t\t\t"},
-	{"net.Send", 	"Net Messages Sent\t"}
+	{"function", 							"Functions:\t\t",			false},
+	{"if",									"If Statements:\t\t", 		false},
+	{"hook.Add", 							"Hooks:\t\t\t", 			false},
+	{"net.Send", 							"Net Messages Sent:\t", 	false},
+	{"umsg.End",							"UserMessages Sent:\t", 	true},
+	{"ai.GetScheduleID", 					"Ai depricated:\t\t",		true},
+	{"ai.GetTaskID", 						"Ai depricated:\t\t",		true},
+	{"IsAscendingOrDescendingLadder",		"CLuaLocomotion:\t\t",		true},
+	{"GetDrawBackground",					"DPanel Depricated\t",		true},
+	{"SetDrawBackground",					"DPanel Depricated\t",		true},
+	{"GetNetworked",						"Get Network Depricated\t",	true},
+	{"SetNetworked",						"Get Network Depricated\t",	true}
 }
+
+local detailLog = "" -- For later printing
+
+local depricatedFiles = {}
 local lines 		= 0
 local noteMode 		= false
 local detailMode	= false
+local checkForDeprication = false
 
 local mostLines 	= 0
 local LineFile 		= ""
@@ -120,6 +133,7 @@ local function scanDir(dir)
 
 				if detailMode == true then
 					print(fl..":\t\t\t"..k..b.."        "..#content)
+					detailLog = (detailLog..fl..":\t\t\t"..k..b.."        "..#content.."\n")
 
 					if #content > mostLines then
 						mostLines = #content
@@ -135,12 +149,16 @@ local function scanDir(dir)
 				for k,v in pairs(content) do
 					for i,r in pairs(checkFilters) do
 						if string.find(noteCheck(v), r[1]) ~= nil then
-							if #r == 2 then
+							if #r == 3 then
 								table.insert(r, 1)
 							else
-								local count = r[3]
-								table.remove(r, 3)
+								local count = r[4]
+								table.remove(r, 4)
 								table.insert(r, (count + 1))
+							end
+
+							if r[3] == true then
+								table.insert(depricatedFiles, {(dir..b..fl), k, r[1]})
 							end
 						end
 					end
@@ -157,6 +175,12 @@ if io.read() == "y" then -- No answer = No let me at that sweet sweet data
 	detailMode = true
 end
 
+print("Check For Depricated Functions/Variables? (y/n)")
+
+if io.read() == "y" then
+	checkForDeprication = true
+end
+
 print("Processing...\n")
 if detailMode == true then
 	print("File Name\t\tKb  Mb\t\tLines")	
@@ -164,7 +188,7 @@ end
 scanDir(curDir)
 
 for k,v in pairs(checkFilters) do
-	if #v == 2 then
+	if #v == 3 then
 		table.insert(v, 0)
 	end
 end
@@ -174,11 +198,68 @@ print("\nStats for the folder "..dirToTable[#dirToTable]..":\n")
 print("lines of code:\t\t"..lines)
 
 for k,v in pairs(checkFilters) do
-	print(v[2]..v[3])
+	if v[3] == true then
+		if checkForDeprication == true then
+			print(v[2]..v[4])
+			break
+		end
+		break
+	end
+	print(v[2]..v[4])
+end
+
+if checkForDeprication == true then
+	if #depricatedFiles > 0 then
+		print("\nDeprecated functions/variables detected (File path, Line, function)")
+		for k,v in pairs(depricatedFiles) do
+			print(v[1].."\t"..v[2].."\t"..v[3])
+		end
+	else
+		print("No depricated functions or variables found! Yay!")
+	end
 end
 
 if detailMode == true then
 	local b,k = processBytes(biggestSize, 0)
 	print("\nFile with most lines:\t"..LineFile.."\t("..mostLines..")")
 	print("File with biggest size:\t"..biggestFile.."\t("..k.."KB   "..b.."b)")
+end
+
+print("Write results to a text file in the currect directory? (y/n)")
+
+if io.read() == "y" then
+	local textToPrint = ("\nStats for the folder "..dirToTable[#dirToTable]..":\nlines of code:\t\t"..lines.."\n")
+	textToPrint = (textToPrint..detailLog)
+
+	for k,v in pairs(checkFilters) do
+		if v[3] == true then
+			if checkForDeprication == true then
+				textToPrint = (textToPrint..v[2]..v[4].."\n")
+				break
+			end
+			break
+		end
+		textToPrint = (textToPrint..v[2]..v[4].."\n")
+	end
+
+	if checkForDeprication == true then
+		if #depricatedFiles > 0 then
+			textToPrint = ("Thank you for using luastats! :)\n"..textToPrint.."\nDeprecated functions/variables detected (File path, Line, function)\n")
+			for k,v in pairs(depricatedFiles) do
+				textToPrint = (textToPrint..v[1].."\t"..v[2].."\t"..v[3].."\n")
+			end
+		else
+			textToPrint = (textToPrint.."No depricated functions or variables found! Yay!\n")
+		end
+	end
+
+	if detailMode == true then
+		local b,k = processBytes(biggestSize, 0)
+		textToPrint = (textToPrint.."\nFile with most lines:\t"..LineFile.."\t("..mostLines..")\n")
+		textToPrint = (textToPrint.."File with biggest size:\t"..biggestFile.."\t("..k.."KB   "..b.."b)\n")
+	end
+
+	local fl = io.open("luaStats.log", "w")
+	fl:write(textToPrint)
+	fl:close()
 end
