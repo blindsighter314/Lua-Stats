@@ -178,6 +178,7 @@ for k,v in pairs(checkFilters) do
 end
 
 if detailMode == true then
+	local b,k = processBytes(biggestSize, 0)
 	print("\nFile with most lines:\t"..LineFile.."\t("..mostLines..")")
-	print("File with biggest size:\t"..biggestFile.."\t("..biggestSize..")")
+	print("File with biggest size:\t"..biggestFile.."\t("..k.."KB   "..b.."b)")
 end
