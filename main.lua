@@ -4,11 +4,19 @@ local b = [[\]]
 local function checkValidDir(dir) return dir ~= "." and dir ~= ".." and dir ~= "main.lua" end
 local checkFilters = { -- {"trigger", "pretty name"}
 	{"function", 	"Functions:\t\t"},
+	{"if",			"If Statements:\t\t"},
 	{"hook.Add", 	"Hooks:\t\t\t"},
 	{"net.Send", 	"Net Messages Sent\t"}
 }
-local lines 	= 0
-local noteMode 	= false
+local lines 		= 0
+local noteMode 		= false
+local detailMode	= true
+
+local mostLines 	= 0
+local LineFile 		= ""
+
+local biggestSize = 0
+local biggestFile = ""
 
 -- explode() function from the lua wiki http://lua-users.org/wiki/SplitJoin FunctionL PHP-like explode
 local function explode(d,p)
@@ -27,6 +35,14 @@ local function explode(d,p)
       end
     end
   return t
+end
+
+local function processBytes(bytes, kilobytes)
+	while bytes >= 1024 do
+		bytes = bytes - 1024
+		kilobytes = kilobytes + 1
+	end
+	return bytes, kilobytes
 end
 
 local function noteCheck(line)
@@ -89,15 +105,32 @@ local function noteCheck(line)
 	end
 end
 
-local function scanDir(dir)
+local function scanDir(dir)	
 	for fl in lfs.dir(dir) do
 		if checkValidDir(fl) then
 			if lfs.attributes(dir..b..fl, "mode") == "directory" then
 				scanDir(dir..b..fl)
 			elseif string.sub(fl, (string.len(fl) - 3), string.len(fl)) == ".lua" then
 				local f = io.open(dir..b..fl, "rb")
-				local content = explode("\n", f:read("*all"))
+				local unprocessed = f:read("*all")
+				local b,k = processBytes(string.len(unprocessed), 0)
+				local content = explode("\n", unprocessed)
 				f:close()
+
+				if detailMode == true then
+					print(fl..":\t\t\t"..k..b.."        "..#content)
+
+					if #content > mostLines then
+						mostLines = #content
+						LineFile = fl
+					end
+
+					if string.len(unprocessed) > biggestSize then
+						biggestSize = string.len(unprocessed)
+						biggestFile = fl
+					end
+				end
+				
 				for k,v in pairs(content) do
 					for i,r in pairs(checkFilters) do
 						if string.find(noteCheck(v), r[1]) ~= nil then
@@ -117,6 +150,9 @@ local function scanDir(dir)
 	end
 end
 print("Processing...\n")
+if detailMode == true then
+	print("File Name\t\tKb  Mb\t\tLines")	
+end
 scanDir(curDir)
 
 for k,v in pairs(checkFilters) do
@@ -126,9 +162,14 @@ for k,v in pairs(checkFilters) do
 end
 
 local dirToTable = explode([[\]], curDir)
-print("Stats for the folder "..dirToTable[#dirToTable]..":\n")
+print("\nStats for the folder "..dirToTable[#dirToTable]..":\n")
 print("lines of code:\t\t"..lines)
 
 for k,v in pairs(checkFilters) do
 	print(v[2]..v[3])
+end
+
+if detailMode == true then
+	print("\nFile with most lines:\t"..LineFile.."\t("..mostLines..")")
+	print("File with biggest size:\t"..biggestFile.."\t("..biggestSize..")")
 end
