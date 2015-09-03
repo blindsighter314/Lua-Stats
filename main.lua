@@ -228,7 +228,8 @@ end
 print("Write results to a text file in the currect directory? (y/n)")
 
 if io.read() == "y" then
-	local textToPrint = ("\nStats for the folder "..dirToTable[#dirToTable]..":\nlines of code:\t\t"..lines.."\n")
+	local textToPrint = ("Thank you for using luastats! :)\n")
+	textToPrint = (textToPrint.."\nStats for the folder "..dirToTable[#dirToTable]..":\nlines of code:\t\t"..lines.."\n")
 	textToPrint = (textToPrint..detailLog)
 
 	for k,v in pairs(checkFilters) do
@@ -244,7 +245,7 @@ if io.read() == "y" then
 
 	if checkForDeprication == true then
 		if #depricatedFiles > 0 then
-			textToPrint = ("Thank you for using luastats! :)\n"..textToPrint.."\nDeprecated functions/variables detected (File path, Line, function)\n")
+			textToPrint = (textToPrint.."\nDeprecated functions/variables detected (File path, Line, function)\n")
 			for k,v in pairs(depricatedFiles) do
 				textToPrint = (textToPrint..v[1].."\t"..v[2].."\t"..v[3].."\n")
 			end
