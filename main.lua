@@ -201,11 +201,10 @@ for k,v in pairs(checkFilters) do
 	if v[3] == true then
 		if checkForDeprication == true then
 			print(v[2]..v[4])
-			break
 		end
-		break
+	else
+		print(v[2]..v[4])
 	end
-	print(v[2]..v[4])
 end
 
 if checkForDeprication == true then
@@ -236,11 +235,10 @@ if io.read() == "y" then
 		if v[3] == true then
 			if checkForDeprication == true then
 				textToPrint = (textToPrint..v[2]..v[4].."\n")
-				break
 			end
-			break
+		else
+			textToPrint = (textToPrint..v[2]..v[4].."\n")
 		end
-		textToPrint = (textToPrint..v[2]..v[4].."\n")
 	end
 
 	if checkForDeprication == true then
